@@ -2,16 +2,33 @@ import pytest
 from unittest.mock import MagicMock
 from strategy import ThresholdStrategy
 
+
 @pytest.fixture
 def mock_broker():
-    return MagicMock()
+    b = MagicMock()
+    b.send_order.return_value = {"status": "filled", "qty": 100}
+    return b
+
 
 def test_buy_signal(mock_broker):
     strategy = ThresholdStrategy(mock_broker, threshold=100)
-    strategy.run([101, 99])
+    result = strategy.run([101, 99])
+
     mock_broker.send_order.assert_called_once_with("BUY", qty=100)
+    assert result == {"status": "filled", "qty": 100}
+
 
 def test_no_trade_on_empty(mock_broker):
     strategy = ThresholdStrategy(mock_broker)
-    strategy.run([])
+    result = strategy.run([])
+
     mock_broker.send_order.assert_not_called()
+    assert result is None
+
+
+def test_no_trade_when_above_threshold(mock_broker):
+    strategy = ThresholdStrategy(mock_broker, threshold=100)
+    result = strategy.run([101, 150])
+
+    mock_broker.send_order.assert_not_called()
+    assert result is None

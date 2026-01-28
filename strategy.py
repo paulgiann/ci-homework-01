@@ -5,6 +5,9 @@ class ThresholdStrategy:
 
     def run(self, prices):
         if not prices:
-            return  # no action on empty input
+            return None
+
         if prices[-1] < self.threshold:
-            self.broker.send_order("BUY", qty=100)
+            return self.broker.send_order("BUY", qty=100)
+
+        return None
